@@ -66,10 +66,10 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Database Helper / Connection Layer**
 
-- [ ] Write `pipeline/db.py` — database connection management
-  - [ ] Connection pool using `psycopg2` (reads `DATABASE_URL` from env)
-  - [ ] Context manager for transactions
-  - [ ] Helper for parameterized queries (prevent SQL injection)
+- [x] Write `pipeline/db.py` — database connection management
+  - [x] Connection pool using `psycopg2` (reads `DATABASE_URL` from env)
+  - [x] Context manager for transactions
+  - [x] Helper for parameterized queries (prevent SQL injection)
 
 **Data Ingester**
 
