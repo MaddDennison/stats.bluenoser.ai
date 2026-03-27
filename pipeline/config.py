@@ -116,19 +116,57 @@ WATCHLIST: dict[str, dict] = {
         "title": "GDP at basic prices, by industry, monthly",
         "frequency": "monthly",
         "topic_slug": "gdp-economic-accounts",
-        "vectors": {},
+        "vectors": {
+            # National only (no provincial breakdown in this table)
+            # Seasonally adjusted at annual rates, Chained (2017) dollars
+            "Canada;All industries": 65201210,
+            "Canada;Goods-producing industries": 65201211,
+            "Canada;Services-producing industries": 65201212,
+            "Canada;Construction": 65201247,
+            "Canada;Manufacturing": 65201239,
+            "Canada;Retail trade": 65201257,
+            "Canada;Mining, quarrying, and oil and gas extraction": 65201228,
+            "Canada;Finance and insurance": 65201261,
+            "Canada;Real estate and rental and leasing": 65201263,
+            "Canada;Public administration": 65201282,
+            "Canada;Health care and social assistance": 65201276,
+            "Canada;Accommodation and food services": 65201271,
+        },
     },
     "20100008": {
         "title": "Retail trade sales by province and territory",
         "frequency": "monthly",
         "topic_slug": "retail-wholesale",
-        "vectors": {},
+        "vectors": {
+            # Seasonally adjusted, total retail
+            "Canada;Retail trade;Seasonally adjusted": 52367097,
+            "Nova Scotia;Retail trade;Seasonally adjusted": 52367454,
+            # Unadjusted — total and key subsectors for NS
+            "Canada;Retail trade;Unadjusted": 52367096,
+            "Nova Scotia;Retail trade;Unadjusted": 52367453,
+            "Nova Scotia;Motor vehicle and parts dealers;Unadjusted": 52367465,
+            "Nova Scotia;Food and beverage retailers;Unadjusted": 52367487,
+            "Nova Scotia;General merchandise and warehouse clubs and superstores;Unadjusted": 52367497,
+            "Nova Scotia;Gasoline stations and fuel vendors;Unadjusted": 52367503,
+        },
     },
     "34100066": {
         "title": "Building permits, by type of structure and type of work",
         "frequency": "monthly",
         "topic_slug": "construction-housing",
-        "vectors": {},
+        "vectors": {
+            # Total residential + non-residential, value of permits, SA current dollars
+            "Canada;Total;Value of permits;SA": 121293395,
+            "Nova Scotia;Total;Value of permits;SA": 121357475,
+            "Halifax;Total;Value of permits;SA": 121677875,
+            # Unadjusted current dollars
+            "Canada;Total;Value of permits;Unadjusted": 121293394,
+            "Nova Scotia;Total;Value of permits;Unadjusted": 121357474,
+            "Halifax;Total;Value of permits;Unadjusted": 121677874,
+            # Residential vs non-residential (NS, unadjusted current)
+            "Nova Scotia;Residential;Value of permits;Unadjusted": 121357560,
+            "Nova Scotia;Non-residential;Value of permits;Unadjusted": 121357690,
+        },
     },
 }
 

@@ -279,29 +279,29 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **GDP by Industry (36-10-0434-01)**
 
-- [ ] Run `map_vectors.py` — discover NS/Canada vectors
-- [ ] Populate vectors in config
-- [ ] Backfill data
+- [x] Run `map_vectors.py` — discover NS/Canada vectors
+- [x] Populate vectors in config
+- [x] Backfill data
 - [ ] Create `pipeline/templates/gdp_release.md` (or test generic template)
 - [ ] Generate sample releases and validate
 
 **Retail Trade (20-10-0008-01)**
 
-- [ ] Run `map_vectors.py` — discover NS/Canada vectors
-- [ ] Populate vectors in config
-- [ ] Backfill data
+- [x] Run `map_vectors.py` — discover NS/Canada vectors
+- [x] Populate vectors in config
+- [x] Backfill data
 - [ ] Generate sample releases and validate
 
 **Building Permits (34-10-0066-01)**
 
-- [ ] Run `map_vectors.py` — discover NS/Canada vectors
-- [ ] Populate vectors in config
-- [ ] Backfill data
+- [x] Run `map_vectors.py` — discover NS/Canada vectors
+- [x] Populate vectors in config
+- [x] Backfill data
 - [ ] Generate sample releases and validate
 
 **Pipeline Integration**
 
-- [ ] Verify daily pipeline handles all 5 tables end-to-end
+- [x] Verify daily pipeline handles all 5 tables end-to-end
 - [ ] Verify website publishes all 5 table types correctly
 - [ ] Verify newsletter includes all released tables in daily digest
 
