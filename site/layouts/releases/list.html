@@ -1,0 +1,11 @@
+{{ define "main" }}
+<h1>Releases</h1>
+<p>Statistical releases generated from Statistics Canada data.</p>
+
+{{ $releases := .Pages.ByDate.Reverse }}
+{{ range $releases }}
+  {{ partial "release-card.html" . }}
+{{ else }}
+  <p>No releases published yet.</p>
+{{ end }}
+{{ end }}

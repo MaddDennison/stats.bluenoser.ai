@@ -1,0 +1,22 @@
+{{ define "main" }}
+<section class="hero">
+  <h1>Nova Scotia Economic Data</h1>
+  <p>Automated analysis of Statistics Canada data, updated daily at 08:31 ET.</p>
+</section>
+
+<section class="latest-releases">
+  <h2>Latest Releases</h2>
+  {{ $releases := where .Site.RegularPages "Section" "releases" }}
+  {{ range first 10 $releases.ByDate.Reverse }}
+    {{ partial "release-card.html" . }}
+  {{ else }}
+    <p>No releases published yet. The pipeline is running and releases will appear here soon.</p>
+  {{ end }}
+</section>
+
+<section class="about-brief">
+  <h2>What is this?</h2>
+  <p>Stats Bluenoser connects directly to Statistics Canada's data APIs, tracks every data revision, and generates analytical releases using AI. It covers CPI, labour market, GDP, retail trade, and building permits for Nova Scotia.</p>
+  <p><a href="/about/">Learn more about the platform and methodology</a></p>
+</section>
+{{ end }}

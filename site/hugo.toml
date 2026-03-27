@@ -1,0 +1,35 @@
+baseURL = "https://stats.bluenoser.ai/"
+languageCode = "en-ca"
+title = "Stats Bluenoser"
+
+[params]
+  description = "Automated economic intelligence platform for Nova Scotia. AI-generated analysis from Statistics Canada data."
+  aiDisclaimer = "This content is AI-generated from Statistics Canada data and has not been reviewed by an economist."
+
+[menu]
+  [[menu.main]]
+    name = "Releases"
+    url = "/releases/"
+    weight = 1
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 2
+  [[menu.main]]
+    name = "Newsletter"
+    url = "/newsletter/"
+    weight = 3
+
+[outputs]
+  home = ["HTML", "RSS"]
+  section = ["HTML", "RSS"]
+
+[outputFormats.RSS]
+  mediaType = "application/rss+xml"
+  baseName = "feed"
+
+[taxonomies]
+  topic = "topics"
+
+[markup.goldmark.renderer]
+  unsafe = true

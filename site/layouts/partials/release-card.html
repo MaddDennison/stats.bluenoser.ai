@@ -1,0 +1,15 @@
+<article class="release-card">
+  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+  <div class="release-meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+    {{ with .Params.topic }}
+      <span class="release-topic">{{ . }}</span>
+    {{ end }}
+    {{ with .Params.geography }}
+      <span class="release-geo">{{ . }}</span>
+    {{ end }}
+  </div>
+  {{ if .Summary }}
+    <p class="release-summary">{{ .Summary }}</p>
+  {{ end }}
+</article>

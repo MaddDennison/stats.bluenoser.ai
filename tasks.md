@@ -207,34 +207,34 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Hugo Site Setup**
 
-- [ ] Install Hugo and initialize site in `site/` directory
-- [ ] Choose a clean, professional theme (gov.uk-style, not startup)
-- [ ] Configure `site/config.toml` — site title, base URL, menu structure
-- [ ] Create layout templates:
-  - [ ] `layouts/_default/baseof.html` — base template with AI disclaimer in footer
-  - [ ] `layouts/index.html` — homepage: latest releases + key indicators summary
-  - [ ] `layouts/releases/single.html` — individual release page with embedded charts
-  - [ ] `layouts/releases/list.html` — release archive, filterable by topic
-  - [ ] `layouts/topics/single.html` — topic-filtered view
-  - [ ] `layouts/partials/release-card.html` — reusable release summary card
-  - [ ] `layouts/partials/ai-disclaimer.html` — standard AI-generated content notice
-  - [ ] `layouts/_default/single.html` — generic page (about, etc.)
-- [ ] Create static pages:
-  - [ ] `site/content/about.md` — what this is, data sources, methodology, AI disclosure
-  - [ ] `site/content/newsletter.md` — archive + subscribe link
-- [ ] Style with minimal CSS — clean typography, data tables, responsive
-- [ ] Every page includes AI-generated content disclaimer
+- [x] Install Hugo and initialize site in `site/` directory
+- [x] Choose a clean, professional theme (gov.uk-style, not startup)
+- [x] Configure `site/hugo.toml` — site title, base URL, menu structure, RSS, taxonomies
+- [x] Create layout templates:
+  - [x] `layouts/_default/baseof.html` — base template with AI disclaimer in footer
+  - [x] `layouts/index.html` — homepage: latest releases + key indicators summary
+  - [x] `layouts/releases/single.html` — individual release page with embedded charts
+  - [x] `layouts/releases/list.html` — release archive, filterable by topic
+  - [x] `layouts/topics/list.html` — topic-filtered view
+  - [x] `layouts/partials/release-card.html` — reusable release summary card
+  - [x] `layouts/partials/ai-disclaimer.html` — standard AI-generated content notice
+  - [x] `layouts/_default/single.html` — generic page (about, etc.)
+- [x] Create static pages:
+  - [x] `site/content/about.md` — what this is, data sources, methodology, AI disclosure
+  - [x] `site/content/newsletter.md` — archive + subscribe link
+- [x] Style with minimal CSS — clean typography, data tables, responsive
+- [x] Every page includes AI-generated content disclaimer
 
 **Publisher Module**
 
-- [ ] Write `pipeline/publisher.py`
-  - [ ] `generate_hugo_markdown(release)` — convert release DB record to Hugo content file
-    - [ ] Front matter: title, date, topic, geography, draft status, source tables
-    - [ ] Body: release markdown content
-    - [ ] Write to `site/content/releases/{slug}.md`
-  - [ ] `build_site()` — run `hugo build`, handle errors
-  - [ ] `deploy_site()` — git commit + push to trigger Cloudflare Pages auto-deploy
-- [ ] Integrate publisher into `run_daily.py` as Step 4 (PUBLISH)
+- [x] Write `pipeline/publisher.py`
+  - [x] `generate_hugo_markdown(release)` — convert release DB record to Hugo content file
+    - [x] Front matter: title, date, topic, geography, draft status, source tables
+    - [x] Body: release markdown content
+    - [x] Write to `site/content/releases/{slug}.md`
+  - [x] `build_site()` — run `hugo build`, handle errors
+  - [x] `deploy_site()` — git commit + push to trigger Cloudflare Pages auto-deploy
+- [x] Integrate publisher into `run_daily.py` as Step 4 (PUBLISH)
 
 **Deployment**
 

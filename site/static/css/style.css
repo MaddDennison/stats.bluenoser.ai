@@ -1,0 +1,185 @@
+/* Stats Bluenoser — Minimal, professional styling */
+
+:root {
+  --text: #1a1a1a;
+  --text-light: #505050;
+  --bg: #ffffff;
+  --bg-alt: #f5f5f5;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --border: #d4d4d4;
+  --disclaimer-bg: #fef3c7;
+  --disclaimer-border: #f59e0b;
+  --max-width: 48rem;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Header */
+.site-header {
+  border-bottom: 3px solid var(--text);
+  padding: 1.5rem 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.site-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-subtitle {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.site-nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.site-nav a:hover,
+.site-nav a.active {
+  text-decoration: underline;
+}
+
+/* Main content */
+main {
+  min-height: 60vh;
+  padding-bottom: 3rem;
+}
+
+h1 { font-size: 1.75rem; margin-bottom: 1rem; line-height: 1.2; }
+h2 { font-size: 1.35rem; margin: 2rem 0 0.75rem; }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+
+p { margin-bottom: 1rem; }
+
+a { color: var(--accent); }
+a:hover { color: var(--accent-hover); }
+
+/* Hero */
+.hero {
+  padding: 1rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.hero h1 { font-size: 2rem; }
+
+/* Release cards */
+.release-card {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.release-card h3 { margin: 0 0 0.25rem; }
+.release-card h3 a { text-decoration: none; }
+.release-card h3 a:hover { text-decoration: underline; }
+
+.release-meta {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.release-topic {
+  background: var(--bg-alt);
+  padding: 0.1rem 0.5rem;
+  border-radius: 3px;
+}
+
+.release-summary {
+  margin-top: 0.5rem;
+  color: var(--text-light);
+}
+
+/* Individual release */
+.release-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.release-body {
+  margin-bottom: 2rem;
+}
+
+.release-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+
+.release-body th,
+.release-body td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.release-body th {
+  background: var(--bg-alt);
+  font-weight: 600;
+}
+
+.release-footer {
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+/* AI Disclaimer */
+.ai-disclaimer {
+  background: var(--disclaimer-bg);
+  border-left: 4px solid var(--disclaimer-border);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+
+.ai-disclaimer p { margin: 0; }
+
+/* Footer */
+.site-footer {
+  border-top: 3px solid var(--text);
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.site-footer a { color: var(--text-light); }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .site-nav { flex-direction: column; gap: 0.5rem; }
+  .hero h1 { font-size: 1.5rem; }
+}

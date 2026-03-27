@@ -1,0 +1,30 @@
+{{ define "main" }}
+<article class="release">
+  <header class="release-header">
+    <h1>{{ .Title }}</h1>
+    <div class="release-meta">
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "January 2, 2006" }}</time>
+      {{ with .Params.topic }}
+        <span class="release-topic">{{ . }}</span>
+      {{ end }}
+      {{ with .Params.ref_period }}
+        <span class="release-period">Reference period: {{ . }}</span>
+      {{ end }}
+      {{ with .Params.geography }}
+        <span class="release-geo">{{ . }}</span>
+      {{ end }}
+    </div>
+  </header>
+
+  <div class="release-body">
+    {{ .Content }}
+  </div>
+
+  <footer class="release-footer">
+    {{ with .Params.source_tables }}
+      <p class="release-sources">Source tables: {{ delimit . ", " }}</p>
+    {{ end }}
+    {{ partial "ai-disclaimer.html" . }}
+  </footer>
+</article>
+{{ end }}

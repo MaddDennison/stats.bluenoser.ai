@@ -215,7 +215,20 @@ def main():
     if not no_analyze and result.tables_ingested > 0:
         analyze_tables(updated_pids, result)
 
-    # Step 4 — LOG
+    # Step 4 — PUBLISH
+    if result.releases_generated > 0:
+        try:
+            from pipeline.publisher import build_site, publish_releases
+
+            logger.info("Publishing releases to Hugo site...")
+            paths = publish_releases(published_only=False)
+            if paths:
+                build_site()
+        except Exception as e:
+            result.errors.append(f"Publish: {e}")
+            logger.error(f"Publishing failed: {e}")
+
+    # Step 5 — LOG
     logger.info(f"\n{result}")
     if result.errors:
         logger.error("Errors:")

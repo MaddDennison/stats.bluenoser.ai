@@ -1,0 +1,9 @@
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+
+{{ range .Pages.ByDate.Reverse }}
+  {{ partial "release-card.html" . }}
+{{ else }}
+  <p>No releases for this topic yet.</p>
+{{ end }}
+{{ end }}
