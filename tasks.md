@@ -185,10 +185,10 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
   - [x] Handle partial failures (one table fails, others continue)
   - [x] Structured logging with timestamps
   - [x] Exit codes: 0 = success, 1 = partial failure, 2 = total failure
-- [ ] Set up cron job to run at 08:31 ET daily
-  - [ ] On local machine (development) or $5/mo VPS (production)
-  - [ ] Cron expression: `31 8 * * 1-5` (8:31 AM ET, weekdays — StatsCan publishes on business days)
-  - [ ] Redirect output to log file
+- [x] Set up cron job to run at 08:31 ET daily
+  - [x] On local machine (development) or $5/mo VPS (production)
+  - [x] Cron expression: `31 8 * * 1-5` (8:31 AM ET, weekdays — StatsCan publishes on business days)
+  - [x] Redirect output to log file
 - [ ] Run pipeline daily for remaining days of the month
 - [ ] Review every generated release manually — build confidence in output quality
 
