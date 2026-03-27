@@ -1,0 +1,27 @@
+-- Seed: NS Finance Economics & Statistics Division 24-category taxonomy
+INSERT INTO topics (name, slug) VALUES
+    ('Balance of Payments, Current Accounts', 'balance-of-payments'),
+    ('Census, National Household Survey', 'census'),
+    ('Community Profile', 'community-profile'),
+    ('Construction, Housing, Investment', 'construction-housing'),
+    ('Consumer Price Index', 'consumer-price-index'),
+    ('Crime, Justice', 'crime-justice'),
+    ('Current Economic Environment and Outlook', 'economic-outlook'),
+    ('Economic Analysis, Forecasts', 'economic-analysis'),
+    ('Education', 'education'),
+    ('Employment, Unemployment', 'employment-unemployment'),
+    ('Exports, Imports, Trade', 'exports-imports-trade'),
+    ('GDP, Economic Accounts, Industry Output', 'gdp-economic-accounts'),
+    ('Health', 'health'),
+    ('Income, Wages', 'income-wages'),
+    ('Indicators of Prosperity', 'indicators-of-prosperity'),
+    ('Labour Market Monthly', 'labour-market-monthly'),
+    ('Manufacturing, Production, Natural Resources', 'manufacturing-production'),
+    ('Monetary and Fiscal Policy, Budgets', 'monetary-fiscal-policy'),
+    ('Nova Scotia Economic Indicators', 'ns-economic-indicators'),
+    ('Population, Demography', 'population-demography'),
+    ('Prices, Inflation, CPI', 'prices-inflation'),
+    ('Productivity', 'productivity'),
+    ('Profits', 'profits'),
+    ('Retail, Wholesale, Household Consumption', 'retail-wholesale')
+ON CONFLICT (slug) DO NOTHING;

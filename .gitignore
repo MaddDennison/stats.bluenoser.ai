@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+venv/
+.venv/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+*.csv
+*.xlsx
+!tests/fixtures/*.csv
+
+# Hugo
+site/public/
+site/resources/
+site/.hugo_build.lock
+
+# Charts
+site/static/charts/*.png
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
