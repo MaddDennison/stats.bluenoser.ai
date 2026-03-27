@@ -330,18 +330,18 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 - [ ] For each: discover vectors, populate config, backfill, generate test releases
 - [ ] Refine generic release template to handle most table types without a custom template
 - [ ] Systematically verify data quality: compare 3+ values per table against StatsCan website
-- [ ] Add RSS/Atom feed — configure Hugo to generate (`config.toml` settings)
+- [x] Add RSS/Atom feed — configure Hugo to generate (`hugo.toml` settings)
 
 ### Week 11: Hardening
 
 **Error Handling**
 
-- [ ] Handle StatsCan downtime: HTTP 409 during lock window (midnight–08:30 ET)
-- [ ] Handle StatsCan API errors: malformed JSON, unexpected response structure
-- [ ] Handle rate limiting: back off if receiving HTTP 429
-- [ ] Handle database errors: connection drops, constraint violations
-- [ ] Handle Claude API errors: rate limits, content filtering, malformed responses
-- [ ] Partial failure resilience: one table failing doesn't block others
+- [x] Handle StatsCan downtime: HTTP 409 during lock window (midnight–08:30 ET)
+- [x] Handle StatsCan API errors: malformed JSON, unexpected response structure
+- [x] Handle rate limiting: back off if receiving HTTP 429
+- [x] Handle database errors: connection drops, constraint violations
+- [x] Handle Claude API errors: rate limits, content filtering, malformed responses
+- [x] Partial failure resilience: one table failing doesn't block others
 
 **Logging & Monitoring**
 
@@ -353,8 +353,8 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Edge Cases**
 
-- [ ] Tables with no NS-specific data (national only) — handle gracefully in templates
-- [ ] Suppressed values (StatsCan uses status codes 'x', 'F', etc.) — don't treat as zero
+- [x] Tables with no NS-specific data (national only) — handle gracefully in templates
+- [x] Suppressed values (StatsCan uses status codes 'x', 'F', etc.) — don't treat as zero
 - [ ] Annual-only tables — don't expect monthly data; adjust release cadence
 - [ ] Quarterly tables — release only when new quarter data available
 - [ ] Tables that haven't updated in a long time — don't generate stale releases

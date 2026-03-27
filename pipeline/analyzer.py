@@ -149,33 +149,61 @@ def build_analysis_prompt(template: str, data_context: dict) -> str:
 def generate_release(prompt: str) -> str:
     """Call Claude API to generate a release from a prompt.
 
+    Handles:
+    - Rate limiting (anthropic.RateLimitError) — retries with backoff
+    - Content filtering / overloaded — retries once
+    - API errors — logs and re-raises
+
     Args:
         prompt: The complete prompt with data and instructions.
 
     Returns:
         Generated markdown text.
     """
+    import time
+
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         raise RuntimeError("ANTHROPIC_API_KEY not set")
 
     client = anthropic.Anthropic(api_key=api_key)
 
-    logger.info(f"Calling Claude API ({AI_MODEL})...")
-    message = client.messages.create(
-        model=AI_MODEL,
-        max_tokens=AI_MAX_TOKENS,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    for attempt in range(3):
+        try:
+            logger.info(f"Calling Claude API ({AI_MODEL})... (attempt {attempt + 1})")
+            message = client.messages.create(
+                model=AI_MODEL,
+                max_tokens=AI_MAX_TOKENS,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": prompt}],
+            )
 
-    text = message.content[0].text
-    logger.info(
-        f"Release generated: {len(text)} chars, "
-        f"input_tokens={message.usage.input_tokens}, "
-        f"output_tokens={message.usage.output_tokens}"
-    )
-    return text
+            text = message.content[0].text
+            logger.info(
+                f"Release generated: {len(text)} chars, "
+                f"input_tokens={message.usage.input_tokens}, "
+                f"output_tokens={message.usage.output_tokens}"
+            )
+            return text
+
+        except anthropic.RateLimitError as e:
+            if attempt < 2:
+                wait = 2 ** (attempt + 2)
+                logger.warning(f"Claude rate limited, retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise RuntimeError(f"Claude API rate limited after 3 attempts: {e}")
+
+        except anthropic.APIStatusError as e:
+            if e.status_code == 529 and attempt < 2:  # Overloaded
+                wait = 2 ** (attempt + 2)
+                logger.warning(f"Claude API overloaded, retrying in {wait}s...")
+                time.sleep(wait)
+            else:
+                raise RuntimeError(f"Claude API error (HTTP {e.status_code}): {e}")
+
+        except anthropic.APIError as e:
+            raise RuntimeError(f"Claude API error: {e}")
 
 
 # -- Significance scoring ----------------------------------------------------

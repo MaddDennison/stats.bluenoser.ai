@@ -66,7 +66,14 @@ class StatCanClient:
     def _request(
         self, method: str, path: str, body: list | dict | None = None
     ) -> list | dict:
-        """Make a request to a WDS endpoint with retry on transient errors."""
+        """Make a request to a WDS endpoint with retry on transient errors.
+
+        Handles:
+        - HTTP 409: data lock window (midnight–08:30 ET) — raises immediately
+        - HTTP 429: rate limiting — backs off and retries
+        - Timeouts / connection errors — retries with exponential backoff
+        - Malformed JSON — raises StatCanError
+        """
         url = f"{self.base_url}/{path}"
 
         for attempt in range(3):
@@ -81,9 +88,30 @@ class StatCanClient:
                     raise StatCanError(
                         "Data lock window (HTTP 409) — tables locked midnight–08:30 ET"
                     )
+
+                if resp.status_code == 429:
+                    wait = 2 ** (attempt + 2)  # 4s, 8s, 16s
+                    logger.warning(
+                        f"Rate limited (HTTP 429), backing off {wait}s "
+                        f"(attempt {attempt + 1}/3)..."
+                    )
+                    if attempt < 2:
+                        time.sleep(wait)
+                        continue
+                    raise StatCanError("Rate limited after 3 attempts (HTTP 429)")
+
                 resp.raise_for_status()
-                return resp.json()
+
+                try:
+                    return resp.json()
+                except (ValueError, TypeError) as e:
+                    raise StatCanError(
+                        f"Malformed JSON response from {path}: {e}"
+                    )
+
             except httpx.HTTPStatusError:
+                raise
+            except StatCanError:
                 raise
             except (httpx.TimeoutException, httpx.ConnectError) as e:
                 if attempt < 2:

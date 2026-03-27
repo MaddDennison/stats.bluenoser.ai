@@ -56,10 +56,23 @@ def close_pool():
 
 @contextmanager
 def get_connection():
-    """Get a connection from the pool. Auto-returns on exit."""
+    """Get a connection from the pool. Auto-returns on exit.
+
+    Handles stale/broken connections by testing and resetting if needed.
+    """
     pool = get_pool()
     conn = pool.getconn()
     try:
+        # Test if connection is alive; reset if stale
+        if conn.closed:
+            pool.putconn(conn, close=True)
+            conn = pool.getconn()
+        else:
+            try:
+                conn.isolation_level
+            except psycopg2.OperationalError:
+                pool.putconn(conn, close=True)
+                conn = pool.getconn()
         yield conn
     finally:
         pool.putconn(conn)
