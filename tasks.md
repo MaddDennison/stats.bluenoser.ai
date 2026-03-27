@@ -160,12 +160,12 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Labour Force Survey — The Hard Test**
 
-- [ ] Run `map_vectors.py` against LFS table (14-10-0287-01)
-  - [ ] Map vectors for: unemployment rate, employment, participation rate, full-time/part-time
-  - [ ] Map across dimensions: geography (NS, Halifax, Canada), age groups, sex
-  - [ ] This table has many more dimensions than CPI — validates pipeline flexibility
-- [ ] Populate LFS vectors in `pipeline/config.py` WATCHLIST
-- [ ] Backfill LFS data (20 years)
+- [x] Run `map_vectors.py` against LFS table (14-10-0287-01)
+  - [x] Map vectors for: unemployment rate, employment, participation rate, full-time/part-time
+  - [x] Map across dimensions: geography (NS, Halifax, Canada), age groups, sex
+  - [x] This table has many more dimensions than CPI — validates pipeline flexibility
+- [x] Populate LFS vectors in `pipeline/config.py` WATCHLIST
+- [x] Backfill LFS data (20 years)
 - [ ] Create `pipeline/templates/labour_release.md` — Labour Market Trends prompt template
   - [ ] This is the flagship release (~3,000 words in the government version)
   - [ ] Sections: headline numbers, age cohorts, gender breakdown, industry sectors, regional comparisons, provincial rankings, CMA-level analysis
@@ -176,15 +176,15 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Daily Pipeline Script**
 
-- [ ] Write `pipeline/run_daily.py` — single entry point for the full pipeline
-  - [ ] Step 1 — CHECK: call `getChangedCubeList(today)`, filter against watchlist
-  - [ ] Step 2 — INGEST: for each changed table, pull updated vectors, upsert data, log revisions
-  - [ ] Step 3 — ANALYZE: for each updated table, build context, generate release, store draft
-  - [ ] Step 4 — LOG: write pipeline run summary (tables checked, data points ingested, releases generated, errors)
-  - [ ] Handle "no updates today" gracefully (log and exit)
-  - [ ] Handle partial failures (one table fails, others continue)
-  - [ ] Structured logging with timestamps
-  - [ ] Exit codes: 0 = success, 1 = partial failure, 2 = total failure
+- [x] Write `pipeline/run_daily.py` — single entry point for the full pipeline
+  - [x] Step 1 — CHECK: call `getChangedCubeList(today)`, filter against watchlist
+  - [x] Step 2 — INGEST: for each changed table, pull updated vectors, upsert data, log revisions
+  - [x] Step 3 — ANALYZE: for each updated table, build context, generate release, store draft
+  - [x] Step 4 — LOG: write pipeline run summary (tables checked, data points ingested, releases generated, errors)
+  - [x] Handle "no updates today" gracefully (log and exit)
+  - [x] Handle partial failures (one table fails, others continue)
+  - [x] Structured logging with timestamps
+  - [x] Exit codes: 0 = success, 1 = partial failure, 2 = total failure
 - [ ] Set up cron job to run at 08:31 ET daily
   - [ ] On local machine (development) or $5/mo VPS (production)
   - [ ] Cron expression: `31 8 * * 1-5` (8:31 AM ET, weekdays — StatsCan publishes on business days)
