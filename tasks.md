@@ -467,8 +467,8 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 **DevOps**
 
 - [x] Set up GitHub Actions for basic CI (run tests on push)
-- [ ] Dockerize the full pipeline (verify `docker compose up` runs end-to-end)
-- [ ] Environment-based configuration (dev/staging/prod via `.env`)
+- [x] Dockerize the full pipeline (verify `docker compose up` runs end-to-end)
+- [x] Environment-based configuration (dev/staging/prod via `.env`)
 
 ---
 

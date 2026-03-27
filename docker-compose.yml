@@ -12,6 +12,27 @@ services:
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./db/seed_sources.sql:/docker-entrypoint-initdb.d/02-seed-sources.sql
       - ./db/seed_topics.sql:/docker-entrypoint-initdb.d/03-seed-topics.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d stats_bluenoser"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pipeline:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/stats_bluenoser
+      STATCAN_RATE_LIMIT: "20"
+      LOG_LEVEL: INFO
+      # Set these to enable AI generation and newsletter:
+      # ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      # RESEND_API_KEY: ${RESEND_API_KEY}
+    volumes:
+      - ./site/content/releases:/app/site/content/releases
+      - ./site/static/charts:/app/site/static/charts
 
 volumes:
   pgdata:
