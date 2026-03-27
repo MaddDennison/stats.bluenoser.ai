@@ -114,30 +114,30 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Prompt Templates**
 
-- [ ] Create `pipeline/templates/cpi_release.md` — CPI release prompt template
-  - [ ] Match the structure of government econ/stats CPI releases
-  - [ ] Section 1: Year-over-year comparison (NS rate, change from prior month's YoY, national average, Halifax rate)
-  - [ ] Section 2: Month-over-month comparison (same structure)
-  - [ ] Define placeholders for structured data injection (`{data_json}`, `{ref_period}`, etc.)
-  - [ ] Include rules: exact numbers, no rounding, "increased"/"decreased"/"unchanged", percentage point changes
-  - [ ] Include AI-generated labeling requirement
-  - [ ] Include source attribution (StatsCan table PID)
+- [x] Create `pipeline/templates/cpi_release.md` — CPI release prompt template
+  - [x] Match the structure of government econ/stats CPI releases
+  - [x] Section 1: Year-over-year comparison (NS rate, change from prior month's YoY, national average, Halifax rate)
+  - [x] Section 2: Month-over-month comparison (same structure)
+  - [x] Define placeholders for structured data injection (`{data_json}`, `{ref_period}`, etc.)
+  - [x] Include rules: exact numbers, no rounding, "increased"/"decreased"/"unchanged", percentage point changes
+  - [x] Include AI-generated labeling requirement
+  - [x] Include source attribution (StatsCan table PID)
 
 **Analysis Engine**
 
-- [ ] Write `pipeline/analyzer.py`
-  - [ ] `build_cpi_context(ref_period)` — query DB for current month, prior month, year-ago month for all CPI vectors (NS, Halifax, Canada, excl. food+energy)
-  - [ ] `build_analysis_prompt(template, data_context)` — inject structured data into prompt template
-  - [ ] `generate_release(prompt)` — call Claude API (Sonnet), return markdown
-    - [ ] Use `config.AI_MODEL` and `config.AI_MAX_TOKENS`
-    - [ ] Include system prompt establishing the analytical voice
-    - [ ] Return structured result: markdown body, title, slug, significance score
-  - [ ] `calculate_significance_score(data_context)` — simple heuristic:
-    - [ ] How far is the latest value from the 12-month moving average?
-    - [ ] Did the direction change (inflation rising → falling)?
-    - [ ] Is NS diverging from the national trend?
-  - [ ] `create_release_record(release_data)` — insert into `releases` table
-  - [ ] Link release to source series via `release_series` table
+- [x] Write `pipeline/analyzer.py`
+  - [x] `build_cpi_context(ref_period)` — query DB for current month, prior month, year-ago month for all CPI vectors (NS, Halifax, Canada, excl. food+energy)
+  - [x] `build_analysis_prompt(template, data_context)` — inject structured data into prompt template
+  - [x] `generate_release(prompt)` — call Claude API (Sonnet), return markdown
+    - [x] Use `config.AI_MODEL` and `config.AI_MAX_TOKENS`
+    - [x] Include system prompt establishing the analytical voice
+    - [x] Return structured result: markdown body, title, slug, significance score
+  - [x] `calculate_significance_score(data_context)` — simple heuristic:
+    - [x] How far is the latest value from the 12-month moving average?
+    - [x] Did the direction change (inflation rising → falling)?
+    - [x] Is NS diverging from the national trend?
+  - [x] `create_release_record(release_data)` — insert into `releases` table
+  - [x] Link release to source series via `release_series` table
 
 **Release Generation & Validation**
 
