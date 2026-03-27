@@ -264,13 +264,13 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Static Chart Generation**
 
-- [ ] Write `pipeline/chart_generator.py`
-  - [ ] `generate_cpi_chart(data)` — line chart: NS CPI vs. national over last 24 months
-  - [ ] `generate_labour_chart(data)` — multi-series: unemployment rate by geography
-  - [ ] `generate_generic_chart(data, title, series_labels)` — reusable for any indicator
-  - [ ] Output: PNG files saved to `site/static/charts/{slug}.png`
-  - [ ] Style: clean, minimal, accessible colors, StatsCan-appropriate
-  - [ ] Include chart in release markdown as embedded image
+- [x] Write `pipeline/chart_generator.py`
+  - [x] `generate_cpi_chart(data)` — line chart: NS CPI vs. national over last 24 months
+  - [x] `generate_labour_chart(data)` — multi-series: unemployment rate by geography
+  - [x] `generate_generic_chart(data, title, series_labels)` — reusable for any indicator
+  - [x] Output: PNG files saved to `site/static/charts/{slug}.png`
+  - [x] Style: clean, minimal, accessible colors, StatsCan-appropriate
+  - [x] Include chart in release markdown as embedded image
 - [ ] Add chart generation to analyzer or publisher pipeline step
 
 ---
