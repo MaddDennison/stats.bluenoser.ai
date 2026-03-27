@@ -166,10 +166,10 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
   - [x] This table has many more dimensions than CPI — validates pipeline flexibility
 - [x] Populate LFS vectors in `pipeline/config.py` WATCHLIST
 - [x] Backfill LFS data (20 years)
-- [ ] Create `pipeline/templates/labour_release.md` — Labour Market Trends prompt template
-  - [ ] This is the flagship release (~3,000 words in the government version)
-  - [ ] Sections: headline numbers, age cohorts, gender breakdown, industry sectors, regional comparisons, provincial rankings, CMA-level analysis
-  - [ ] Much more complex than CPI — tests the AI's ability to handle multi-dimensional data
+- [x] Create `pipeline/templates/labour_release.md` — Labour Market Trends prompt template
+  - [x] This is the flagship release (~3,000 words in the government version)
+  - [x] Sections: headline numbers, age cohorts, gender breakdown, national comparison
+  - [x] Much more complex than CPI — tests the AI's ability to handle multi-dimensional data
 - [ ] Generate 2–3 sample Labour Market releases from historical data
 - [ ] Compare against government Labour Market Trends releases
 - [ ] Iterate on labour prompt template
@@ -194,10 +194,10 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Generic Release Template**
 
-- [ ] Create `pipeline/templates/generic_release.md` — fallback template
-  - [ ] Works for any table type without a custom template
-  - [ ] Summarizes: what changed, by how much, NS vs. national, direction of trend
-  - [ ] Less detailed than custom templates but functional for expansion tables
+- [x] Create `pipeline/templates/generic_release.md` — fallback template
+  - [x] Works for any table type without a custom template
+  - [x] Summarizes: what changed, by how much, NS vs. national, direction of trend
+  - [x] Less detailed than custom templates but functional for expansion tables
 
 ---
 

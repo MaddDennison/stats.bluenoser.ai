@@ -134,36 +134,42 @@ def analyze_tables(pids: set[str], result: PipelineResult):
         config = WATCHLIST[pid]
         topic_slug = config.get("topic_slug", "")
 
-        # Only CPI has a template so far
-        if topic_slug == "consumer-price-index":
-            try:
-                from pipeline.analyzer import generate_cpi_release
+        # Map topic slugs to generator functions
+        generators = {
+            "consumer-price-index": "generate_cpi_release",
+            "labour-market-monthly": "generate_lfs_release",
+        }
 
-                # Find the latest reference period in the database
-                from pipeline import db
-
-                row = db.execute_one(
-                    """SELECT MAX(dp.ref_period) as latest
-                       FROM data_points dp
-                       JOIN series s ON dp.series_id = s.series_id
-                       JOIN data_tables dt ON s.table_id = dt.table_id
-                       WHERE dt.source_pid = %s""",
-                    (pid,),
-                )
-                if row and row["latest"]:
-                    ref_period = row["latest"]
-                    logger.info(f"Generating CPI release for {ref_period}...")
-                    release = generate_cpi_release(ref_period)
-                    result.releases_generated += 1
-                    logger.info(
-                        f"  Generated: {release['title']} "
-                        f"(significance={release['significance_score']:.2f})"
-                    )
-            except Exception as e:
-                result.errors.append(f"Analyze {pid}: {e}")
-                logger.error(f"  {pid}: analysis failed — {e}")
-        else:
+        generator_name = generators.get(topic_slug)
+        if not generator_name:
             logger.info(f"  {pid}: no prompt template yet — skipping analysis")
+            continue
+
+        try:
+            from pipeline import analyzer, db
+
+            generator_fn = getattr(analyzer, generator_name)
+
+            row = db.execute_one(
+                """SELECT MAX(dp.ref_period) as latest
+                   FROM data_points dp
+                   JOIN series s ON dp.series_id = s.series_id
+                   JOIN data_tables dt ON s.table_id = dt.table_id
+                   WHERE dt.source_pid = %s""",
+                (pid,),
+            )
+            if row and row["latest"]:
+                ref_period = row["latest"]
+                logger.info(f"Generating {topic_slug} release for {ref_period}...")
+                release = generator_fn(ref_period)
+                result.releases_generated += 1
+                logger.info(
+                    f"  Generated: {release['title']} "
+                    f"(significance={release['significance_score']:.2f})"
+                )
+        except Exception as e:
+            result.errors.append(f"Analyze {pid}: {e}")
+            logger.error(f"  {pid}: analysis failed — {e}")
 
 
 def main():

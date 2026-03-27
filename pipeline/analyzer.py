@@ -349,3 +349,164 @@ def generate_cpi_release(ref_period: date, dry_run: bool = False) -> dict:
         f"CPI release generated: {title} (significance={significance:.2f})"
     )
     return result
+
+
+# -- Labour Force Survey (LFS) release --------------------------------------
+
+
+def build_lfs_context(ref_period: date) -> dict:
+    """Build the data context for a Labour Market Trends release.
+
+    Queries the database for the current month, prior month, and year-ago
+    month across all LFS vectors (headlines, age, gender breakdowns).
+
+    Args:
+        ref_period: The reference period (first day of the month).
+
+    Returns:
+        Dict with structured data for template injection.
+    """
+    if ref_period.month == 1:
+        prior_month = date(ref_period.year - 1, 12, 1)
+    else:
+        prior_month = date(ref_period.year, ref_period.month - 1, 1)
+    year_ago = date(ref_period.year - 1, ref_period.month, 1)
+
+    rows = db.execute(
+        """SELECT s.description, s.geo_name, dp.ref_period, dp.value
+           FROM data_points dp
+           JOIN series s ON dp.series_id = s.series_id
+           JOIN data_tables dt ON s.table_id = dt.table_id
+           WHERE dt.source_pid = '14100287'
+             AND dp.ref_period IN (%s, %s, %s)
+           ORDER BY s.description, dp.ref_period""",
+        (ref_period, prior_month, year_ago),
+    )
+
+    series_data = {}
+    for row in rows:
+        desc = row["description"]
+        if desc not in series_data:
+            series_data[desc] = {}
+        period = row["ref_period"]
+        value = float(row["value"]) if row["value"] is not None else None
+        if period == ref_period:
+            series_data[desc]["current"] = value
+        elif period == prior_month:
+            series_data[desc]["prior_month"] = value
+        elif period == year_ago:
+            series_data[desc]["year_ago"] = value
+
+    # Calculate changes
+    for desc, values in series_data.items():
+        current = values.get("current")
+        year_ago_val = values.get("year_ago")
+        prior_val = values.get("prior_month")
+
+        # For rates (unemployment rate, etc.): report point changes
+        # For levels (employment, etc.): report level and percentage changes
+        is_rate = any(
+            r in desc for r in ["rate", "Participation rate", "Employment rate"]
+        )
+
+        if current is not None and prior_val is not None:
+            values["mom_change"] = round(current - prior_val, 1)
+            if not is_rate and prior_val != 0:
+                values["mom_pct"] = round(
+                    (current - prior_val) / prior_val * 100, 1
+                )
+
+        if current is not None and year_ago_val is not None:
+            values["yoy_change"] = round(current - year_ago_val, 1)
+            if not is_rate and year_ago_val != 0:
+                values["yoy_pct"] = round(
+                    (current - year_ago_val) / year_ago_val * 100, 1
+                )
+
+    return {
+        "ref_period": ref_period.isoformat(),
+        "ref_month": ref_period.strftime("%B"),
+        "ref_year": ref_period.year,
+        "prior_month_period": prior_month.isoformat(),
+        "prior_month_name": prior_month.strftime("%B %Y"),
+        "year_ago_period": year_ago.isoformat(),
+        "year_ago_name": year_ago.strftime("%B %Y"),
+        "series": series_data,
+    }
+
+
+def generate_lfs_release(ref_period: date, dry_run: bool = False) -> dict:
+    """Generate a Labour Market Trends release for a given reference period."""
+    month_name = ref_period.strftime("%B")
+    year = ref_period.year
+    title = f"LABOUR MARKET TRENDS, {month_name.upper()} {year}"
+    slug = f"labour-market-{month_name.lower()}-{year}"
+
+    logger.info(f"Generating LFS release for {month_name} {year}...")
+
+    context = build_lfs_context(ref_period)
+
+    if not context["series"]:
+        raise ValueError(f"No LFS data found for {ref_period}")
+
+    ns_emp = context["series"].get("Nova Scotia;Employment", {})
+    if "current" not in ns_emp:
+        raise ValueError(f"No NS Employment data for {ref_period}")
+
+    template = load_template("labour_release.md")
+    prompt = build_analysis_prompt(template, context)
+    body_markdown = generate_release(prompt)
+
+    # Significance: check unemployment rate changes
+    ns_ur = context["series"].get("Nova Scotia;Unemployment rate", {})
+    significance = 0.0
+    ca_ur = context["series"].get("Canada;Unemployment rate", {})
+    ns_ur_current = ns_ur.get("current")
+    ca_ur_current = ca_ur.get("current")
+    ns_ur_mom = ns_ur.get("mom_change")
+
+    if ns_ur_mom is not None and abs(ns_ur_mom) >= 0.5:
+        significance += 0.3
+    if ns_ur_current is not None and ca_ur_current is not None:
+        gap = abs(ns_ur_current - ca_ur_current)
+        if gap > 1.5:
+            significance += 0.3
+    ns_ur_yoy = ns_ur.get("yoy_change")
+    if ns_ur_yoy is not None and abs(ns_ur_yoy) >= 1.0:
+        significance += 0.2
+
+    significance = min(significance, 1.0)
+
+    result = {
+        "title": title,
+        "slug": slug,
+        "body_markdown": body_markdown,
+        "ref_period": f"{month_name} {year}",
+        "significance_score": significance,
+        "data_context": context,
+    }
+
+    if not dry_run:
+        series_rows = db.execute(
+            """SELECT s.series_id FROM series s
+               JOIN data_tables dt ON s.table_id = dt.table_id
+               WHERE dt.source_pid = '14100287'""",
+        )
+        series_ids = [r["series_id"] for r in series_rows]
+
+        release_id = create_release_record(
+            title=title,
+            slug=slug,
+            body_markdown=body_markdown,
+            topic_slug="labour-market-monthly",
+            ref_period=f"{month_name} {year}",
+            source_table_pids=["14-10-0287-01"],
+            significance_score=significance,
+            series_ids=series_ids,
+        )
+        result["release_id"] = release_id
+
+    logger.info(
+        f"LFS release generated: {title} (significance={significance:.2f})"
+    )
+    return result
