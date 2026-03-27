@@ -47,13 +47,13 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 **API Verification & Vector Discovery**
 
 - [x] Run `test_api.py` — verify StatsCan API is reachable and returning expected data
-- [ ] Run `map_vectors.py` against CPI table (18-10-0004-01)
-  - [ ] Identify vector IDs for: NS All-items, Halifax All-items, Canada All-items
-  - [ ] Identify vector IDs for: NS All-items excl. food & energy, Canada All-items excl. food & energy
-  - [ ] Identify vector IDs for any other CPI components used in government releases (shelter, transportation, food, energy, etc.)
-- [ ] Populate CPI vectors in `pipeline/config.py` WATCHLIST
-- [ ] Verify pulled CPI data by spot-checking 5+ values against the StatsCan website
-- [ ] Save CPI metadata fixture to `tests/fixtures/metadata_18100004.json`
+- [x] Run `map_vectors.py` against CPI table (18-10-0004-01)
+  - [x] Identify vector IDs for: NS All-items, Halifax All-items, Canada All-items
+  - [x] Identify vector IDs for: NS All-items excl. food & energy, Canada All-items excl. food & energy
+  - [x] Identify vector IDs for any other CPI components used in government releases (shelter, transportation, food, energy, etc.)
+- [x] Populate CPI vectors in `pipeline/config.py` WATCHLIST
+- [x] Verify pulled CPI data by spot-checking 5+ values against the StatsCan website
+- [x] Save CPI metadata fixture to `tests/fixtures/metadata_18100004.json`
 
 **Configuration & Models**
 

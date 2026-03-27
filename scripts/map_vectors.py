@@ -1,100 +1,127 @@
 """Discover vectors for a StatsCan table, filtered by geography.
 
-Pulls cube metadata and identifies vectors for Nova Scotia, Halifax,
-and Canada. Outputs a mapping suitable for pasting into config.py.
+Downloads the full table CSV to extract vector IDs for Nova Scotia,
+Halifax, and Canada. Outputs a mapping suitable for config.py.
 
 Run: python -m scripts.map_vectors 18100004
 """
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import sys
+import zipfile
+
+import httpx
 
 from pipeline.statcan_client import StatCanClient
 
-
 # Geographies we care about
-TARGET_GEOS = [
-    "Canada",
-    "Nova Scotia",
-    "Halifax",
-    # CMA-level (Halifax Census Metropolitan Area)
-    "Halifax, Nova Scotia",
-]
+TARGET_GEOS = ["Canada", "Nova Scotia", "Halifax, Nova Scotia"]
 
 
 def discover_vectors(product_id: int):
     print(f"Discovering vectors for table {product_id}...\n")
 
     with StatCanClient() as client:
+        # Get metadata for context
         meta = client.get_cube_metadata(product_id)
+        title = meta.get("cubeTitleEn", "Unknown")
+        print(f"Table: {product_id} — {title}")
 
-    title = meta.get("cubeTitleEn", "Unknown")
-    print(f"Table: {product_id} — {title}\n")
-
-    dims = meta.get("dimension", [])
-    geo_dim = None
-    other_dims = []
-
-    # Identify geography dimension vs. other dimensions
-    for d in dims:
-        name = d.get("dimensionNameEn", "").lower()
-        if "geography" in name or "geo" in name:
-            geo_dim = d
+        # Get the CSV download URL
+        print("Fetching CSV download URL...")
+        resp = client._request("GET", f"getFullTableDownloadCSV/{product_id}/en")
+        if isinstance(resp, dict) and "object" in resp:
+            csv_url = resp["object"]
+        elif isinstance(resp, str):
+            csv_url = resp
         else:
-            other_dims.append(d)
+            print(f"Unexpected response: {resp}")
+            return
 
-    if not geo_dim:
-        print("WARNING: No geography dimension found. Listing all dimensions:")
-        for d in dims:
-            members = d.get("member", [])
-            print(f"  [{d.get('dimensionPositionId')}] {d.get('dimensionNameEn')}: {len(members)} members")
-            for m in members[:10]:
-                print(f"    {m.get('memberId')}: {m.get('memberNameEn')}")
-        return
+    print(f"Downloading from {csv_url}...")
+    dl = httpx.get(csv_url, follow_redirects=True, timeout=120)
+    dl.raise_for_status()
+    print(f"Downloaded {len(dl.content):,} bytes")
 
-    # Find our target geographies
-    print("Geography dimension members:")
-    target_members = []
-    for m in geo_dim.get("member", []):
-        name = m.get("memberNameEn", "")
-        matched = any(t.lower() in name.lower() for t in TARGET_GEOS)
-        marker = " <<<" if matched else ""
-        print(f"  {m.get('memberId')}: {name}{marker}")
-        if matched:
-            target_members.append(m)
+    z = zipfile.ZipFile(io.BytesIO(dl.content))
+    csv_name = [n for n in z.namelist() if n.endswith(".csv") and "MetaData" not in n][0]
 
-    print(f"\n--- Target geographies found: {len(target_members)} ---\n")
+    # Parse CSV and extract vectors for target geographies
+    vectors_by_geo: dict[str, list[dict]] = {geo: [] for geo in TARGET_GEOS}
 
-    # Show other dimensions (so user understands what the coordinates mean)
-    print("Other dimensions:")
-    for d in other_dims:
-        members = d.get("member", [])
-        print(f"  [{d.get('dimensionPositionId')}] {d.get('dimensionNameEn')}: {len(members)} members")
-        for m in members[:15]:
-            print(f"    {m.get('memberId')}: {m.get('memberNameEn')}")
-        if len(members) > 15:
-            print(f"    ... and {len(members) - 15} more")
+    with z.open(csv_name) as f:
+        reader = csv.DictReader(io.TextIOWrapper(f, encoding="utf-8-sig"))
+        fieldnames = reader.fieldnames
+        print(f"\nCSV columns: {fieldnames}\n")
 
-    # Output structured mapping
+        # Identify the non-standard dimension columns
+        # Standard columns: REF_DATE, GEO, DGUID, UOM, UOM_ID, SCALAR_FACTOR,
+        #                   SCALAR_ID, VECTOR, COORDINATE, VALUE, STATUS, SYMBOL,
+        #                   TERMINATED, DECIMALS
+        standard = {
+            "REF_DATE", "GEO", "DGUID", "UOM", "UOM_ID", "SCALAR_FACTOR",
+            "SCALAR_ID", "VECTOR", "COORDINATE", "VALUE", "STATUS", "SYMBOL",
+            "TERMINATED", "DECIMALS",
+        }
+        dim_columns = [c for c in fieldnames if c not in standard]
+        print(f"Dimension columns: {dim_columns}")
+
+        seen_vectors = set()
+        for row in reader:
+            geo = row.get("GEO", "")
+            vector = row.get("VECTOR", "")
+            if geo in TARGET_GEOS and vector and vector not in seen_vectors:
+                seen_vectors.add(vector)
+                dim_values = {c: row.get(c, "") for c in dim_columns}
+                vectors_by_geo[geo].append({
+                    "vector": vector,
+                    "coordinate": row.get("COORDINATE", ""),
+                    **dim_values,
+                })
+
+    # Display results
+    for geo in TARGET_GEOS:
+        vecs = vectors_by_geo[geo]
+        print(f"\n{'='*60}")
+        print(f"  {geo}: {len(vecs)} vectors")
+        print(f"{'='*60}")
+        for v in vecs[:30]:
+            dim_str = ", ".join(f"{k}={v[k]}" for k in dim_columns if v.get(k))
+            vid = v["vector"].lstrip("v")
+            print(f"  {v['vector']} (coord {v['coordinate']}): {dim_str}")
+        if len(vecs) > 30:
+            print(f"  ... and {len(vecs) - 30} more")
+
+    # Output config.py format
     print(f"\n{'='*60}")
-    print(f"  Vector mapping template for config.py")
+    print(f"  config.py vectors dict")
     print(f"{'='*60}")
-    print(f'  # Table {product_id}: {title}')
-    print(f'  "vectors": {{')
-    for m in target_members:
-        geo = m.get("memberNameEn", "")
-        mid = m.get("memberId", "")
-        print(f'      # {geo} (member {mid})')
-        print(f'      # TODO: Use getSeriesInfoFromVector or full CSV to get vector IDs')
-    print(f'  }}')
+    print(f'"vectors": {{')
+    for geo in TARGET_GEOS:
+        short_geo = geo.split(",")[0]  # "Halifax, Nova Scotia" -> "Halifax"
+        print(f"    # {short_geo}")
+        for v in vectors_by_geo[geo]:
+            dim_str = ";".join(v.get(c, "") for c in dim_columns)
+            vid = v["vector"].lstrip("v")
+            label = f"{short_geo};{dim_str}"
+            print(f'    "{label}": {vid},')
+    print("}")
 
-    # Save full metadata for reference
-    out_path = f"tests/fixtures/metadata_{product_id}.json"
+    # Save fixture
+    out_path = f"tests/fixtures/vectors_{product_id}.json"
     with open(out_path, "w") as f:
+        json.dump(vectors_by_geo, f, indent=2, default=str)
+    print(f"\nVector data saved to {out_path}")
+
+    # Save metadata fixture
+    meta_path = f"tests/fixtures/metadata_{product_id}.json"
+    with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2, default=str)
-    print(f"\nFull metadata saved to {out_path}")
+    print(f"Metadata saved to {meta_path}")
 
 
 def main():

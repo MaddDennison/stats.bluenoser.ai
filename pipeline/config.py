@@ -44,9 +44,23 @@ WATCHLIST: dict[str, dict] = {
         "frequency": "monthly",
         "topic_slug": "consumer-price-index",
         "vectors": {
-            # To be populated by map_vectors.py against CPI table
-            # Expected: NS All-items, Halifax All-items, Canada All-items,
-            #           NS All-items excl food+energy, Canada All-items excl food+energy
+            # Canada
+            "Canada;All-items": 41690973,
+            "Canada;All-items excluding food and energy": 41691233,
+            "Canada;Food": 41690974,
+            "Canada;Shelter": 41691050,
+            "Canada;Energy": 41691239,
+            # Nova Scotia
+            "Nova Scotia;All-items": 41691513,
+            "Nova Scotia;All-items excluding food and energy": 41691638,
+            "Nova Scotia;Food": 41691514,
+            "Nova Scotia;Shelter": 41691546,
+            "Nova Scotia;Transportation": 41691581,
+            "Nova Scotia;Energy": 41691644,
+            "Nova Scotia;Clothing and footwear": 41691573,
+            "Nova Scotia;Health and personal care": 41691597,
+            # Halifax CMA
+            "Halifax;All-items": 41692858,
         },
     },
     "14100287": {
