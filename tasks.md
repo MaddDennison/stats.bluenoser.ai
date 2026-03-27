@@ -73,40 +73,40 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Data Ingester**
 
-- [ ] Write `pipeline/ingester.py`
-  - [ ] `ensure_table_exists(source_pid)` — upsert into `data_tables` from config watchlist
-  - [ ] `ensure_series_exists(table_id, vector_id, metadata)` — upsert into `series` with geo/dimension info
-  - [ ] `ingest_data_points(series_id, data_points)` — upsert into `data_points`
-    - [ ] On conflict (same series + ref_period): compare values
-    - [ ] If value changed: insert into `revisions` table before updating
-    - [ ] Handle NULL/suppressed values (StatsCan uses status codes for suppression)
-  - [ ] `ingest_from_vectors(vector_ids, n_periods)` — pull latest N periods via client, parse WDS response, write to DB
-  - [ ] `ingest_from_ref_period_range(vector_ids, start, end)` — backfill method
-  - [ ] Parse StatsCan WDS JSON response format:
-    - [ ] Extract `refPer` (reference period) → convert to `DATE`
-    - [ ] Extract `value` → `NUMERIC`
-    - [ ] Extract `statusCode`, `symbolCode`, `decimals`, `releaseDate`
-    - [ ] Handle the nested `object` → `vectorDataPoint` response structure
-  - [ ] Log ingestion stats: rows inserted, rows updated, revisions detected
+- [x] Write `pipeline/ingester.py`
+  - [x] `ensure_table_exists(source_pid)` — upsert into `data_tables` from config watchlist
+  - [x] `ensure_series_exists(table_id, vector_id, metadata)` — upsert into `series` with geo/dimension info
+  - [x] `ingest_data_points(series_id, data_points)` — upsert into `data_points`
+    - [x] On conflict (same series + ref_period): compare values
+    - [x] If value changed: insert into `revisions` table before updating
+    - [x] Handle NULL/suppressed values (StatsCan uses status codes for suppression)
+  - [x] `ingest_from_vectors(vector_ids, n_periods)` — pull latest N periods via client, parse WDS response, write to DB
+  - [x] `ingest_backfill(vector_ids, n_periods)` — backfill method (uses latestN; ref-period-range endpoint returns 405)
+  - [x] Parse StatsCan WDS JSON response format:
+    - [x] Extract `refPer` (reference period) → convert to `DATE`
+    - [x] Extract `value` → `NUMERIC`
+    - [x] Extract `statusCode`, `symbolCode`, `decimals`, `releaseDate`
+    - [x] Handle the nested `object` → `vectorDataPoint` response structure
+  - [x] Log ingestion stats: rows inserted, rows updated, revisions detected
 
 **Backfill Script**
 
-- [ ] Write `scripts/backfill.py`
-  - [ ] Accept table PID as argument (or "all" for entire watchlist)
-  - [ ] Calculate date range from `config.BACKFILL_YEARS` (20 years)
-  - [ ] Batch vector requests to avoid hitting rate limits (chunk by 10–25 vectors)
-  - [ ] Progress reporting (table X of Y, Z data points ingested)
-  - [ ] Idempotent — safe to re-run without duplicating data
-- [ ] Run backfill for CPI table (18-10-0004-01) — ~20 years of monthly data
-- [ ] Verify ingested CPI data: spot-check at least 10 data points across different periods against StatsCan website
-- [ ] Verify revision detection works: manually modify a stored value, re-ingest, confirm revision record is created
+- [x] Write `scripts/backfill.py`
+  - [x] Accept table PID as argument (or "all" for entire watchlist)
+  - [x] Calculate date range from `config.BACKFILL_YEARS` (20 years)
+  - [x] Batch vector requests to avoid hitting rate limits (chunk by 10–25 vectors)
+  - [x] Progress reporting (table X of Y, Z data points ingested)
+  - [x] Idempotent — safe to re-run without duplicating data
+- [x] Run backfill for CPI table (18-10-0004-01) — ~20 years of monthly data
+- [x] Verify ingested CPI data: spot-check at least 10 data points across different periods against StatsCan website
+- [x] Verify revision detection works: manually modify a stored value, re-ingest, confirm revision record is created
 
 **Data Quality Checks**
 
-- [ ] Write `scripts/verify_data.py` — spot-check script
-  - [ ] For a given table + vector, pull latest value from DB and from StatsCan API
-  - [ ] Compare and report discrepancies
-  - [ ] Run across all ingested vectors as a data quality gate
+- [x] Write `scripts/verify_data.py` — spot-check script
+  - [x] For a given table + vector, pull latest value from DB and from StatsCan API
+  - [x] Compare and report discrepancies
+  - [x] Run across all ingested vectors as a data quality gate
 
 ---
 
