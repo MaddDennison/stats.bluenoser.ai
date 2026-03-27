@@ -251,14 +251,14 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 **Newsletter**
 
 - [ ] Set up Resend account (free tier: 100 emails/day)
-- [ ] Create `pipeline/templates/daily_digest.html` — email template
-  - [ ] Subject line format: "NS Economic Data — {date}"
-  - [ ] List today's releases with 1-sentence summary and link
-  - [ ] Footer: AI-generated disclaimer, unsubscribe link
-- [ ] Add to `publisher.py`:
-  - [ ] `compile_daily_digest(releases)` — build email HTML from today's releases
-  - [ ] `send_newsletter(digest_html, subject)` — send via Resend API
-  - [ ] `log_newsletter_send(subject, recipient_count)` — insert into `newsletter_sends`
+- [x] Create `pipeline/templates/daily_digest.html` — email template
+  - [x] Subject line format: "NS Economic Data — {date}"
+  - [x] List today's releases with 1-sentence summary and link
+  - [x] Footer: AI-generated disclaimer, unsubscribe link
+- [x] Add to `publisher.py`:
+  - [x] `compile_daily_digest(releases)` — build email HTML from today's releases
+  - [x] `send_newsletter(digest_html, subject)` — send via Resend API
+  - [x] `log_newsletter_send(subject, recipient_count)` — insert into `newsletter_sends`
 - [ ] Subscribe yourself — receive daily digest for one week
 - [ ] Verify email rendering in major clients (Gmail, Apple Mail)
 
@@ -271,7 +271,7 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
   - [x] Output: PNG files saved to `site/static/charts/{slug}.png`
   - [x] Style: clean, minimal, accessible colors, StatsCan-appropriate
   - [x] Include chart in release markdown as embedded image
-- [ ] Add chart generation to analyzer or publisher pipeline step
+- [x] Add chart generation to analyzer or publisher pipeline step
 
 ---
 

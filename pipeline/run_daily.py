@@ -17,6 +17,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import date
 
+from pipeline import db
 from pipeline.config import WATCHLIST
 from pipeline.db import close_pool
 from pipeline.ingester import IngestionStats, ingest_from_vectors
@@ -215,15 +216,43 @@ def main():
     if not no_analyze and result.tables_ingested > 0:
         analyze_tables(updated_pids, result)
 
-    # Step 4 — PUBLISH
+    # Step 4 — CHARTS
+    if result.tables_ingested > 0:
+        try:
+            from pipeline.chart_generator import generate_cpi_chart, generate_labour_chart
+
+            logger.info("Generating charts...")
+            if "18100004" in updated_pids:
+                generate_cpi_chart()
+            if "14100287" in updated_pids:
+                generate_labour_chart()
+        except Exception as e:
+            logger.warning(f"Chart generation failed (non-fatal): {e}")
+
+    # Step 5 — PUBLISH
     if result.releases_generated > 0:
         try:
-            from pipeline.publisher import build_site, publish_releases
+            from pipeline.publisher import (
+                build_site, compile_daily_digest, publish_releases, send_newsletter,
+            )
 
             logger.info("Publishing releases to Hugo site...")
             paths = publish_releases(published_only=False)
             if paths:
                 build_site()
+
+            # Send newsletter digest
+            releases = db.execute(
+                """SELECT r.*, t.slug as topic_slug
+                   FROM releases r
+                   LEFT JOIN topics t ON r.topic_id = t.topic_id
+                   WHERE r.created_at::date = CURRENT_DATE
+                   ORDER BY r.created_at DESC""",
+            )
+            if releases:
+                subject, html = compile_daily_digest(releases)
+                send_newsletter(subject, html)
+
         except Exception as e:
             result.errors.append(f"Publish: {e}")
             logger.error(f"Publishing failed: {e}")

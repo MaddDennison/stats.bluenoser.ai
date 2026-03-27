@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{subject}</title>
+<style>
+  body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1a1a1a; background: #f5f5f5; margin: 0; padding: 0; }}
+  .wrapper {{ max-width: 600px; margin: 0 auto; background: #ffffff; }}
+  .header {{ background: #1a1a1a; color: #ffffff; padding: 20px 24px; }}
+  .header h1 {{ margin: 0; font-size: 20px; font-weight: 700; }}
+  .header p {{ margin: 4px 0 0; font-size: 13px; color: #a0a0a0; }}
+  .content {{ padding: 24px; }}
+  .date-line {{ font-size: 14px; color: #505050; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #1a1a1a; }}
+  .release {{ margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #d4d4d4; }}
+  .release:last-child {{ border-bottom: none; }}
+  .release h2 {{ font-size: 16px; margin: 0 0 6px; }}
+  .release h2 a {{ color: #1d4ed8; text-decoration: none; }}
+  .release .meta {{ font-size: 12px; color: #6b7280; margin-bottom: 6px; }}
+  .release .summary {{ font-size: 14px; line-height: 1.5; color: #374151; }}
+  .no-releases {{ font-size: 14px; color: #6b7280; font-style: italic; }}
+  .divider {{ border: none; border-top: 2px solid #1a1a1a; margin: 20px 0; }}
+  .disclaimer {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 16px 0; font-size: 12px; color: #92400e; }}
+  .footer {{ padding: 16px 24px; font-size: 12px; color: #6b7280; background: #f9fafb; }}
+  .footer a {{ color: #6b7280; }}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <h1>Stats Bluenoser</h1>
+    <p>Nova Scotia Economic Intelligence</p>
+  </div>
+  <div class="content">
+    <div class="date-line">{date_formatted}</div>
+
+    {releases_html}
+
+    <div class="disclaimer">
+      This content is AI-generated from Statistics Canada data and has not been reviewed by an economist.
+    </div>
+  </div>
+  <div class="footer">
+    <p>Data sourced under the <a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence — Canada</a>.</p>
+    <p><a href="{site_url}">stats.bluenoser.ai</a></p>
+  </div>
+</div>
+</body>
+</html>
