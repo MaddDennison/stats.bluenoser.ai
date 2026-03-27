@@ -30,7 +30,6 @@ def test_get_cube_metadata(client: StatCanClient) -> dict:
     for d in dims:
         members = d.get("member", [])
         print(f"  [{d.get('dimensionPositionId')}] {d.get('dimensionNameEn')}: {len(members)} members")
-        # Show first 5 members
         for m in members[:5]:
             print(f"       {m.get('memberId')}: {m.get('memberNameEn')}")
         if len(members) > 5:
@@ -38,93 +37,93 @@ def test_get_cube_metadata(client: StatCanClient) -> dict:
     return meta
 
 
-def find_ns_vectors(meta: dict) -> list[int]:
-    """Extract vector IDs for Nova Scotia from CPI metadata."""
-    section("2. Finding Nova Scotia vectors in CPI table")
-    vectors = []
+def find_ns_vectors(meta: dict):
+    """Show geography dimension members matching NS/Halifax/Canada."""
+    section("2. Geography dimension — NS/Halifax/Canada members")
     dims = meta.get("dimension", [])
-
-    # Look through dimensions for geography
     for d in dims:
-        for m in d.get("member", []):
-            name = m.get("memberNameEn", "")
-            if "Nova Scotia" in name or "nova scotia" in name.lower():
-                print(f"  Found NS member: {name} (ID: {m.get('memberId')})")
-
-    # Also search for vectors in the series metadata if available
-    # The cube metadata may not have vectors directly — we may need
-    # getSeriesInfoFromVector or the full CSV to discover them.
-    print("\n  Note: Vector IDs are not always in cube metadata.")
-    print("  Use map_vectors.py for full vector discovery.")
-    return vectors
+        name = d.get("dimensionNameEn", "").lower()
+        if "geography" in name or "geo" in name:
+            print(f"Geography dimension [{d.get('dimensionPositionId')}]:")
+            for m in d.get("member", []):
+                mname = m.get("memberNameEn", "")
+                if any(t in mname.lower() for t in ["canada", "nova scotia", "halifax"]):
+                    print(f"  >>> {m.get('memberId')}: {mname}")
+            return
+    print("  No geography dimension found in this table.")
 
 
 def test_changed_cubes(client: StatCanClient):
     section("3. getChangedCubeList — what changed recently?")
-    # Check last 7 days to ensure we get some results
     start = date.today() - timedelta(days=7)
     changes = client.get_changed_cube_list(start)
-    print(f"Tables changed since {start}: {len(changes)}")
 
-    # Check if CPI is in the list
-    cpi_found = False
-    for c in changes:
-        pid = c.get("productId")
-        if pid == CPI_PID:
-            cpi_found = True
-            print(f"\n  *** CPI table found in changes ***")
-            print(f"  Release time: {c.get('releaseTime')}")
-    if not cpi_found:
-        print(f"  CPI table ({CPI_PID}) not in recent changes (normal if no release this week)")
+    if isinstance(changes, list):
+        print(f"Tables changed since {start}: {len(changes)}")
+        cpi_found = False
+        for c in changes:
+            pid = c.get("productId")
+            if pid == CPI_PID:
+                cpi_found = True
+                print(f"\n  *** CPI table found in changes ***")
+                print(f"  Release time: {c.get('releaseTime')}")
+        if not cpi_found:
+            print(f"  CPI table ({CPI_PID}) not in recent changes (normal if no release this week)")
 
-    # Show a few changed tables
-    print(f"\n  Sample of changed tables:")
-    for c in changes[:10]:
-        print(f"    {c.get('productId')}: released {c.get('releaseTime')}")
+        print(f"\n  Sample of changed tables:")
+        for c in changes[:10]:
+            print(f"    {c.get('productId')}: released {c.get('releaseTime')}")
+    else:
+        print(f"  Unexpected response type: {type(changes)}")
 
 
 def test_latest_data(client: StatCanClient):
-    section("4. getDataFromVectorsAndLatestNPeriods — pull sample data")
-    # v41690973 is CPI All-items, Canada (a well-known vector)
-    # If this vector doesn't work, we'll discover the right ones with map_vectors.py
+    section("4. getDataFromVectorsAndLatestNPeriods — pull sample CPI data")
+    # v41690973 = CPI All-items, Canada (confirmed working)
     test_vector = 41690973
     print(f"Pulling latest 6 periods for vector {test_vector} (CPI All-items, Canada)...")
 
-    try:
-        result = client.get_data_from_vectors_latest_n([test_vector], n=6)
-        if result:
-            obj = result[0].get("object", result[0])
-            points = obj.get("vectorDataPoint", [])
-            vector_info = {
-                "vectorId": obj.get("vectorId"),
-                "coordinate": obj.get("coordinate"),
-            }
-            print(f"  Vector info: {json.dumps(vector_info, indent=2)}")
-            print(f"  Data points ({len(points)}):")
-            for pt in points:
-                ref = pt.get("refPer") or pt.get("refPerRaw")
-                val = pt.get("value")
-                print(f"    {ref}: {val}")
-        else:
-            print("  No data returned. Vector ID may need updating.")
-            print("  Run map_vectors.py to discover current NS vectors.")
-    except StatCanError as e:
-        print(f"  Error: {e}")
-        print("  This is expected if the vector ID is outdated. Run map_vectors.py.")
+    result = client.get_data_from_vectors_latest_n([test_vector], n=6)
+    if result and isinstance(result, list):
+        obj = result[0]
+        points = obj.get("vectorDataPoint", [])
+        print(f"  Vector ID: {obj.get('vectorId')}")
+        print(f"  Product ID: {obj.get('productId')}")
+        print(f"  Coordinate: {obj.get('coordinate')}")
+        print(f"\n  Data points ({len(points)}):")
+        for pt in points:
+            ref = pt.get("refPer")
+            val = pt.get("value")
+            decimals = pt.get("decimals", 1)
+            release = pt.get("releaseTime", "")[:10]
+            print(f"    {ref}: {val} (released {release})")
+    else:
+        print("  No data returned.")
+
+
+def test_series_info(client: StatCanClient):
+    section("5. getSeriesInfoFromVector — vector metadata")
+    test_vector = 41690973
+    result = client.get_series_info_from_vector([test_vector])
+    if result and isinstance(result, list):
+        info = result[0]
+        print(f"  Vector ID: {info.get('vectorId')}")
+        print(f"  Table PID: {info.get('productId')}")
+        print(f"  Coordinate: {info.get('coordinate')}")
+        print(f"  Title: {info.get('SeriesTitleEn', info.get('seriesTitleEn', 'N/A'))}")
 
 
 def test_code_sets(client: StatCanClient):
-    section("5. getCodeSets — reference codes")
+    section("6. getCodeSets — reference codes")
     codes = client.get_code_sets()
     if isinstance(codes, list):
-        for codeset in codes:
-            obj = codeset.get("object", codeset) if isinstance(codeset, dict) else codeset
-            if isinstance(obj, dict):
-                desc = obj.get("codeSetTitleEn", obj.get("descEn", "unknown"))
+        for cs in codes[:5]:
+            if isinstance(cs, dict):
+                desc = cs.get("codeSetTitleEn", cs.get("descEn", "unknown"))
                 print(f"  Code set: {desc}")
     elif isinstance(codes, dict):
-        for key, val in codes.items():
-            print(f"  {key}: {type(val).__name__}")
+        for key in list(codes.keys())[:5]:
+            print(f"  {key}: {type(codes[key]).__name__}")
 
 
 def main():
@@ -133,21 +132,12 @@ def main():
 
     with StatCanClient() as client:
         try:
-            # 1. Metadata
             meta = test_get_cube_metadata(client)
-
-            # 2. Find NS vectors
             find_ns_vectors(meta)
-
-            # 3. Changed cubes
             test_changed_cubes(client)
-
-            # 4. Pull actual data
             test_latest_data(client)
-
-            # 5. Code sets
+            test_series_info(client)
             test_code_sets(client)
-
         except StatCanError as e:
             print(f"\n*** StatsCan API Error: {e} ***", file=sys.stderr)
             sys.exit(1)
@@ -157,7 +147,7 @@ def main():
 
     section("DONE")
     print("API is reachable and returning data.")
-    print("Next step: run map_vectors.py to discover NS/Halifax/Canada vectors for CPI.")
+    print("Next step: python -m scripts.map_vectors 18100004")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 # Statistics Canada WDS API
-STATCAN_BASE_URL = "https://www150.statcan.gc.ca/t1/tbl1/en/dtps"
+STATCAN_BASE_URL = "https://www150.statcan.gc.ca/t1/wds/rest"
 
 # Rate limiting (requests per second, per IP limit is 25)
 STATCAN_RATE_LIMIT = 20

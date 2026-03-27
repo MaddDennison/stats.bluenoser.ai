@@ -18,11 +18,11 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 - [x] Write `.gitignore`, `.env.example`, `Makefile`, `Dockerfile`, `docker-compose.yml`
 - [x] Write `requirements.txt` with core dependencies
 - [x] Write `README.md`
-- [ ] Set up PostgreSQL database (Supabase project or local Docker)
-- [ ] Run `schema.sql` — create all 9 tables and 10 indexes
-- [ ] Run `seed_sources.sql` — insert Statistics Canada as source
-- [ ] Run `seed_topics.sql` — insert 24-topic taxonomy
-- [ ] Verify database is accessible and seeded correctly
+- [x] Set up PostgreSQL database (Supabase project or local Docker)
+- [x] Run `schema.sql` — create all 9 tables and 10 indexes
+- [x] Run `seed_sources.sql` — insert Statistics Canada as source
+- [x] Run `seed_topics.sql` — insert 24-topic taxonomy
+- [x] Verify database is accessible and seeded correctly
 
 **StatsCan API Client**
 
@@ -46,7 +46,7 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **API Verification & Vector Discovery**
 
-- [ ] Run `test_api.py` — verify StatsCan API is reachable and returning expected data
+- [x] Run `test_api.py` — verify StatsCan API is reachable and returning expected data
 - [ ] Run `map_vectors.py` against CPI table (18-10-0004-01)
   - [ ] Identify vector IDs for: NS All-items, Halifax All-items, Canada All-items
   - [ ] Identify vector IDs for: NS All-items excl. food & energy, Canada All-items excl. food & energy

@@ -3,8 +3,13 @@
 Implements the public REST API documented at:
 https://www.statcan.gc.ca/en/developers/wds
 
-All methods return parsed JSON. The client handles rate limiting,
-retries, and the midnight–08:30 ET data lock window.
+Base URL: https://www150.statcan.gc.ca/t1/wds/rest
+
+API conventions (discovered empirically):
+  - Discovery/listing endpoints are GET with parameters in the URL path
+  - Data retrieval endpoints are POST with JSON body
+  - Responses wrap data in {"status": "SUCCESS", "object": {...}}
+  - List endpoints return a flat list of these wrapper objects
 
 This module has no database dependencies — it only talks to the API
 and returns Python dicts/lists. The ingester module handles persistence.
@@ -58,17 +63,23 @@ class StatCanClient:
 
     # -- HTTP helpers --------------------------------------------------------
 
-    def _post(self, method: str, body: list | dict | None = None) -> list | dict:
-        """POST to a WDS endpoint with retry on transient errors."""
-        url = f"{self.base_url}/{method}"
-        self._throttle()
+    def _request(
+        self, method: str, path: str, body: list | dict | None = None
+    ) -> list | dict:
+        """Make a request to a WDS endpoint with retry on transient errors."""
+        url = f"{self.base_url}/{path}"
 
         for attempt in range(3):
+            self._throttle()
             try:
-                resp = self._client.post(url, json=body or [])
+                if method == "GET":
+                    resp = self._client.get(url, follow_redirects=True)
+                else:
+                    resp = self._client.post(url, json=body or [])
+
                 if resp.status_code == 409:
                     raise StatCanError(
-                        f"Data lock window (HTTP 409) — tables locked midnight–08:30 ET"
+                        "Data lock window (HTTP 409) — tables locked midnight–08:30 ET"
                     )
                 resp.raise_for_status()
                 return resp.json()
@@ -82,17 +93,27 @@ class StatCanClient:
                     )
                     time.sleep(wait)
                 else:
-                    raise StatCanError(f"StatsCan API unreachable after 3 attempts: {e}")
+                    raise StatCanError(
+                        f"StatsCan API unreachable after 3 attempts: {e}"
+                    )
 
-    def _get(self, path: str) -> httpx.Response:
-        """GET request (used for CSV/SDMX downloads)."""
-        url = f"{self.base_url}/{path}"
-        self._throttle()
-        resp = self._client.get(url, follow_redirects=True)
-        resp.raise_for_status()
-        return resp
+    @staticmethod
+    def _unwrap(response: list | dict) -> list | dict:
+        """Unwrap the standard WDS response envelope.
 
-    # -- Discovery methods ---------------------------------------------------
+        WDS wraps responses in {"status": "SUCCESS", "object": {...}}.
+        For list endpoints, it returns a list of these wrappers.
+        """
+        if isinstance(response, list):
+            return [
+                item.get("object", item) if isinstance(item, dict) else item
+                for item in response
+            ]
+        if isinstance(response, dict) and "object" in response:
+            return response["object"]
+        return response
+
+    # -- Discovery methods (GET) ---------------------------------------------
 
     def get_changed_cube_list(self, start_date: date) -> list[dict]:
         """Get list of tables that changed on or after start_date.
@@ -100,21 +121,29 @@ class StatCanClient:
         This is the daily trigger — call at 08:31 ET to see what updated.
         Returns list of dicts with productId, releaseTime, etc.
         """
-        body = {"startDate": start_date.strftime("%Y-%m-%d")}
-        result = self._post("getChangedCubeList", body)
-        logger.info(f"Changed cubes since {start_date}: {len(result)} tables")
-        return result
+        date_str = start_date.strftime("%Y-%m-%d")
+        result = self._request("GET", f"getChangedCubeList/{date_str}")
+        unwrapped = self._unwrap(result)
+        if isinstance(unwrapped, list):
+            logger.info(f"Changed cubes since {start_date}: {len(unwrapped)} tables")
+        return unwrapped
 
     def get_changed_series_list(self, start_date: date) -> list[dict]:
         """Get list of series (vectors) that changed on or after start_date."""
-        body = {"startDate": start_date.strftime("%Y-%m-%d")}
-        return self._post("getChangedSeriesList", body)
+        date_str = start_date.strftime("%Y-%m-%d")
+        return self._unwrap(
+            self._request("GET", f"getChangedSeriesList/{date_str}")
+        )
 
     def get_all_cubes_list_lite(self) -> list[dict]:
         """List all available tables (lightweight metadata)."""
-        return self._post("getAllCubesListLite")
+        return self._request("GET", "getAllCubesListLite")
 
-    # -- Metadata methods ----------------------------------------------------
+    def get_code_sets(self) -> list | dict:
+        """Get reference code definitions (status codes, symbol codes, etc.)."""
+        return self._unwrap(self._request("GET", "getCodeSets"))
+
+    # -- Metadata methods (POST) ---------------------------------------------
 
     def get_cube_metadata(self, product_id: int) -> dict:
         """Get full metadata for a table: dimensions, members, structure.
@@ -125,11 +154,14 @@ class StatCanClient:
         Returns:
             Dict with dimension info, member lists, footnotes, etc.
         """
-        result = self._post("getCubeMetadata", [{"productId": product_id}])
-        if isinstance(result, list) and len(result) > 0:
-            obj = result[0].get("object", result[0])
-            return obj
-        return result
+        result = self._request(
+            "POST", "getCubeMetadata", [{"productId": product_id}]
+        )
+        unwrapped = self._unwrap(result)
+        # getCubeMetadata returns a list with one element
+        if isinstance(unwrapped, list) and len(unwrapped) > 0:
+            return unwrapped[0]
+        return unwrapped
 
     def get_series_info_from_vector(self, vector_ids: list[int]) -> list[dict]:
         """Look up series details by vector ID.
@@ -138,13 +170,11 @@ class StatCanClient:
             vector_ids: List of vector IDs (integers, without 'v' prefix).
         """
         body = [{"vectorId": v} for v in vector_ids]
-        return self._post("getSeriesInfoFromVector", body)
+        return self._unwrap(
+            self._request("POST", "getSeriesInfoFromVector", body)
+        )
 
-    def get_code_sets(self) -> dict:
-        """Get reference code definitions (status codes, symbol codes, etc.)."""
-        return self._post("getCodeSets")
-
-    # -- Data retrieval methods ----------------------------------------------
+    # -- Data retrieval methods (POST) ---------------------------------------
 
     def get_data_from_vectors_latest_n(
         self, vector_ids: list[int], n: int = 12
@@ -158,13 +188,16 @@ class StatCanClient:
             n: Number of most recent periods to retrieve.
 
         Returns:
-            List of response objects, one per vector, each containing
-            a 'vectorDataPoint' list of data points.
+            List of unwrapped response objects, one per vector, each
+            containing a 'vectorDataPoint' list of data points.
         """
         body = [{"vectorId": v, "latestN": n} for v in vector_ids]
-        result = self._post("getDataFromVectorsAndLatestNPeriods", body)
+        result = self._request(
+            "POST", "getDataFromVectorsAndLatestNPeriods", body
+        )
+        unwrapped = self._unwrap(result)
         logger.info(f"Pulled latest {n} periods for {len(vector_ids)} vectors")
-        return result
+        return unwrapped
 
     def get_bulk_vector_data_by_range(
         self,
@@ -194,7 +227,9 @@ class StatCanClient:
             }
             for v in vector_ids
         ]
-        return self._post("getBulkVectorDataByRange", body)
+        return self._unwrap(
+            self._request("POST", "getBulkVectorDataByRange", body)
+        )
 
     def get_data_by_ref_period_range(
         self, vector_ids: list[int], start_period: date, end_period: date
@@ -216,7 +251,9 @@ class StatCanClient:
             }
             for v in vector_ids
         ]
-        return self._post("getDataFromVectorByReferencePeriodRange", body)
+        return self._unwrap(
+            self._request("POST", "getDataFromVectorByReferencePeriodRange", body)
+        )
 
     # -- Bulk downloads ------------------------------------------------------
 
@@ -226,9 +263,7 @@ class StatCanClient:
         Does not download the file — returns the redirect URL so the caller
         can stream or save it as needed.
         """
-        path = f"getFullTableDownloadCSV/{product_id}/en"
-        url = f"{self.base_url}/{path}"
-        # HEAD request to resolve redirect without downloading
+        url = f"{self.base_url}/getFullTableDownloadCSV/{product_id}/en"
         self._throttle()
         resp = self._client.head(url, follow_redirects=True)
         resp.raise_for_status()
@@ -240,7 +275,10 @@ class StatCanClient:
         Returns raw ZIP bytes. The caller is responsible for unzipping
         and parsing. Use for initial database seeding.
         """
-        resp = self._get(f"getFullTableDownloadCSV/{product_id}/en")
+        url = f"{self.base_url}/getFullTableDownloadCSV/{product_id}/en"
+        self._throttle()
+        resp = self._client.get(url, follow_redirects=True)
+        resp.raise_for_status()
         logger.info(
             f"Downloaded full CSV for table {product_id} ({len(resp.content)} bytes)"
         )
