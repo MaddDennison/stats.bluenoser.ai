@@ -451,11 +451,11 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Testing**
 
-- [ ] Write `tests/test_statcan_client.py` — unit tests with mocked HTTP responses
-- [ ] Write `tests/test_ingester.py` — test data parsing, upserts, revision detection
-- [ ] Write `tests/test_analyzer.py` — test prompt building, data context assembly
-- [ ] Create `tests/fixtures/` with sample WDS API responses for offline testing
-- [ ] Set up pytest configuration (`pytest.ini` or `pyproject.toml`)
+- [x] Write `tests/test_statcan_client.py` — unit tests with mocked HTTP responses
+- [x] Write `tests/test_ingester.py` — test data parsing, upserts, revision detection
+- [x] Write `tests/test_analyzer.py` — test prompt building, data context assembly
+- [x] Create `tests/fixtures/` with sample WDS API responses for offline testing
+- [x] Set up pytest configuration (`pytest.ini` or `pyproject.toml`)
 
 **Documentation**
 
