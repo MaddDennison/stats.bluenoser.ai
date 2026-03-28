@@ -459,8 +459,8 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Documentation**
 
-- [ ] Write `docs/architecture.md` — condensed version of the full plan
-- [ ] Write `docs/data_sources.md` — detailed API docs per source
+- [x] Write `docs/architecture.md` — condensed version of the full plan
+- [x] Write `docs/data_sources.md` — detailed API docs per source
 - [x] Write `docs/deployment.md` — how to deploy the full stack
 - [x] Keep `CONTRIBUTING.md` updated
 
