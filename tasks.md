@@ -365,9 +365,9 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 - [ ] Invite 5–10 friends/colleagues to the newsletter
 - [ ] Collect structured feedback: what's useful, what's wrong, what's missing
 - [ ] Fix the most critical issues surfaced by feedback
-- [ ] Write contributor documentation (`CONTRIBUTING.md`)
-- [ ] Write deployment documentation (`docs/deployment.md`)
-- [ ] Review and update `README.md` with current state
+- [x] Write contributor documentation (`CONTRIBUTING.md`)
+- [x] Write deployment documentation (`docs/deployment.md`)
+- [x] Review and update `README.md` with current state
 
 ---
 
@@ -461,8 +461,8 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 - [ ] Write `docs/architecture.md` — condensed version of the full plan
 - [ ] Write `docs/data_sources.md` — detailed API docs per source
-- [ ] Write `docs/deployment.md` — how to deploy the full stack
-- [ ] Keep `CONTRIBUTING.md` updated
+- [x] Write `docs/deployment.md` — how to deploy the full stack
+- [x] Keep `CONTRIBUTING.md` updated
 
 **DevOps**
 
