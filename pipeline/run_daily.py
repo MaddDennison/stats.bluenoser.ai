@@ -21,13 +21,10 @@ from pipeline import db
 from pipeline.config import WATCHLIST
 from pipeline.db import close_pool
 from pipeline.ingester import IngestionStats, ingest_from_vectors
+from pipeline.logging_config import setup_logging
 from pipeline.statcan_client import StatCanClient, StatCanError
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    datefmt="%H:%M:%S",
-)
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -63,6 +60,22 @@ class PipelineResult:
             f"{self.total_updated} updated, {self.total_revisions} revisions\n"
             f"  Releases: {self.releases_generated} generated"
         )
+
+    def to_health_dict(self) -> dict:
+        """Return a structured dict for JSON logging and newsletter footer."""
+        return {
+            "date": str(self.date),
+            "status": "ok" if not self.errors else "error",
+            "tables_checked": self.tables_checked,
+            "tables_updated": self.tables_updated,
+            "tables_ingested": self.tables_ingested,
+            "releases_generated": self.releases_generated,
+            "data_inserted": self.total_inserted,
+            "data_updated": self.total_updated,
+            "revisions_detected": self.total_revisions,
+            "error_count": len(self.errors),
+            "errors": self.errors,
+        }
 
 
 def check_for_updates(client: StatCanClient, today: date) -> set[str]:
@@ -173,6 +186,38 @@ def analyze_tables(pids: set[str], result: PipelineResult):
             logger.error(f"  {pid}: analysis failed — {e}")
 
 
+def _send_failure_alert(result: PipelineResult):
+    """Send an alert email on total pipeline failure."""
+    import os
+
+    api_key = os.environ.get("RESEND_API_KEY")
+    alert_to = os.environ.get("ALERT_EMAIL")
+    if not api_key or not alert_to:
+        logger.warning("RESEND_API_KEY or ALERT_EMAIL not set — cannot send failure alert")
+        return
+
+    try:
+        import resend
+
+        resend.api_key = api_key
+        from_addr = os.environ.get("NEWSLETTER_FROM", "Stats Bluenoser <digest@stats.bluenoser.ai>")
+        error_list = "\n".join(f"- {e}" for e in result.errors)
+        resend.Emails.send({
+            "from": from_addr,
+            "to": [alert_to],
+            "subject": f"ALERT: Stats Bluenoser pipeline failed — {result.date}",
+            "html": (
+                f"<h2>Pipeline Total Failure</h2>"
+                f"<p>Date: {result.date}</p>"
+                f"<p>Tables checked: {result.tables_checked}, ingested: {result.tables_ingested}</p>"
+                f"<h3>Errors:</h3><pre>{error_list}</pre>"
+            ),
+        })
+        logger.info(f"Failure alert sent to {alert_to}")
+    except Exception as e:
+        logger.error(f"Failed to send alert email: {e}")
+
+
 def main():
     force = "--force" in sys.argv
     no_analyze = "--no-analyze" in sys.argv
@@ -257,12 +302,21 @@ def main():
             result.errors.append(f"Publish: {e}")
             logger.error(f"Publishing failed: {e}")
 
-    # Step 5 — LOG
+    # Step 6 — LOG
+    import json as _json
+
+    health = result.to_health_dict()
+    logger.info(f"Health summary: {_json.dumps(health, default=str)}")
     logger.info(f"\n{result}")
+
     if result.errors:
         logger.error("Errors:")
         for err in result.errors:
             logger.error(f"  - {err}")
+
+    # Alert on total failure
+    if result.exit_code == 2:
+        _send_failure_alert(result)
 
     close_pool()
     sys.exit(result.exit_code)

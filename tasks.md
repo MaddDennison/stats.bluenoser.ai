@@ -345,11 +345,11 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 **Logging & Monitoring**
 
-- [ ] Implement structured logging throughout pipeline (JSON format)
-- [ ] Daily health summary: tables checked, data points ingested, releases generated, errors
-- [ ] Append health summary to daily newsletter (as footer or separate "pipeline health" section)
-- [ ] Log file rotation (don't fill disk)
-- [ ] Alert on total pipeline failure (email via Resend to yourself)
+- [x] Implement structured logging throughout pipeline (JSON format)
+- [x] Daily health summary: tables checked, data points ingested, releases generated, errors
+- [x] Append health summary to daily newsletter (as footer or separate "pipeline health" section)
+- [x] Log file rotation (don't fill disk)
+- [x] Alert on total pipeline failure (email via Resend to yourself)
 
 **Edge Cases**
 
