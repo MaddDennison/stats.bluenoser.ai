@@ -355,10 +355,10 @@ The goal is to generate one CPI release from live StatsCan data that is comparab
 
 - [x] Tables with no NS-specific data (national only) — handle gracefully in templates
 - [x] Suppressed values (StatsCan uses status codes 'x', 'F', etc.) — don't treat as zero
-- [ ] Annual-only tables — don't expect monthly data; adjust release cadence
-- [ ] Quarterly tables — release only when new quarter data available
-- [ ] Tables that haven't updated in a long time — don't generate stale releases
-- [ ] Reference period format variations (some tables use quarters, some use months)
+- [x] Annual-only tables — don't expect monthly data; adjust release cadence
+- [x] Quarterly tables — release only when new quarter data available
+- [x] Tables that haven't updated in a long time — don't generate stale releases
+- [x] Reference period format variations (some tables use quarters, some use months)
 
 ### Week 12: First Audience
 

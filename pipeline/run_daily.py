@@ -133,10 +133,52 @@ def ingest_tables(
             logger.error(f"  {pid}: ingestion failed — {e}")
 
 
+def _is_stale_release(pid: str, ref_period, frequency: str | None) -> bool:
+    """Check if a release already exists for this table + period, or if data is stale.
+
+    Prevents duplicate releases and handles frequency-aware gating:
+    - Monthly tables: generate if ref_period is within the last 2 months
+    - Quarterly tables: generate only if ref_period is within the last 4 months
+    - Annual tables: generate only if ref_period is within the last 13 months
+    """
+    from datetime import timedelta
+
+    today = date.today()
+
+    # Staleness thresholds by frequency
+    max_age_days = {
+        "monthly": 62,      # ~2 months
+        "quarterly": 120,   # ~4 months
+        "annual": 400,      # ~13 months
+    }
+    threshold = max_age_days.get(frequency or "monthly", 62)
+    age = (today - ref_period).days
+    if age > threshold:
+        logger.info(
+            f"  {pid}: latest data ({ref_period}) is {age} days old "
+            f"(threshold={threshold} for {frequency}) — skipping stale release"
+        )
+        return True
+
+    # Check if we already generated a release for this period
+    existing = db.execute_one(
+        """SELECT release_id FROM releases
+           WHERE slug LIKE %s AND ref_period LIKE %s""",
+        (f"%{pid.replace('1', '')}%", f"%{ref_period.strftime('%B')}%{ref_period.year}%"),
+    )
+    if existing:
+        logger.info(f"  {pid}: release already exists for {ref_period} — skipping")
+        return True
+
+    return False
+
+
 def analyze_tables(pids: set[str], result: PipelineResult):
     """Step 3 — ANALYZE: generate AI releases for updated tables.
 
     Only runs for tables that have prompt templates and an API key configured.
+    Handles frequency-aware gating (monthly/quarterly/annual) and staleness
+    detection to avoid duplicate or outdated releases.
     """
     import os
 
@@ -147,6 +189,7 @@ def analyze_tables(pids: set[str], result: PipelineResult):
     for pid in sorted(pids):
         config = WATCHLIST[pid]
         topic_slug = config.get("topic_slug", "")
+        frequency = config.get("frequency")
 
         # Map topic slugs to generator functions
         generators = {
@@ -160,7 +203,7 @@ def analyze_tables(pids: set[str], result: PipelineResult):
             continue
 
         try:
-            from pipeline import analyzer, db
+            from pipeline import analyzer
 
             generator_fn = getattr(analyzer, generator_name)
 
@@ -172,15 +215,23 @@ def analyze_tables(pids: set[str], result: PipelineResult):
                    WHERE dt.source_pid = %s""",
                 (pid,),
             )
-            if row and row["latest"]:
-                ref_period = row["latest"]
-                logger.info(f"Generating {topic_slug} release for {ref_period}...")
-                release = generator_fn(ref_period)
-                result.releases_generated += 1
-                logger.info(
-                    f"  Generated: {release['title']} "
-                    f"(significance={release['significance_score']:.2f})"
-                )
+            if not row or not row["latest"]:
+                logger.warning(f"  {pid}: no data in database — skipping")
+                continue
+
+            ref_period = row["latest"]
+
+            # Frequency-aware gating and staleness check
+            if _is_stale_release(pid, ref_period, frequency):
+                continue
+
+            logger.info(f"Generating {topic_slug} release for {ref_period}...")
+            release = generator_fn(ref_period)
+            result.releases_generated += 1
+            logger.info(
+                f"  Generated: {release['title']} "
+                f"(significance={release['significance_score']:.2f})"
+            )
         except Exception as e:
             result.errors.append(f"Analyze {pid}: {e}")
             logger.error(f"  {pid}: analysis failed — {e}")

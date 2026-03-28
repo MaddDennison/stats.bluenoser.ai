@@ -214,8 +214,19 @@ def parse_vector_response(vector_data: dict) -> list[dict]:
         if not ref_per_str:
             continue
 
-        # Parse reference period (YYYY-MM-DD)
-        ref_period = date.fromisoformat(ref_per_str)
+        # Parse reference period — handles multiple formats:
+        # Monthly: "2026-02-01", Quarterly: "2026-01-01" (Q1 start), Annual: "2026-01-01"
+        # Some responses may omit the day: "2026-02"
+        try:
+            if len(ref_per_str) == 7:  # "YYYY-MM"
+                ref_period = date.fromisoformat(ref_per_str + "-01")
+            elif len(ref_per_str) == 4:  # "YYYY"
+                ref_period = date.fromisoformat(ref_per_str + "-01-01")
+            else:
+                ref_period = date.fromisoformat(ref_per_str)
+        except ValueError:
+            logger.warning(f"Unparseable reference period: {ref_per_str!r} — skipping")
+            continue
 
         # Parse value — None if suppressed
         status_code = pt.get("statusCode", 0)
